@@ -6,7 +6,41 @@
 
 <div class="mb-4">
     <h2 class="fw-bold mb-1">Dashboard</h2>
-    <p class="text-muted">Ringkasan arus kas Hadi Scents</p>
+    <p class="text-muted mb-0">Ringkasan arus kas Hadi Scents per bulan</p>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ route('dashboard') }}">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="bulan" class="form-label fw-semibold">Bulan</label>
+                    <select id="bulan" name="bulan" class="form-select">
+                        @foreach(range(1,12) as $b)
+                            <option value="{{ $b }}" {{ (int) $bulan === $b ? 'selected' : '' }}>
+                                {{ date('F', mktime(0,0,0,$b,1)) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="tahun" class="form-label fw-semibold">Tahun</label>
+                    <input id="tahun"
+                           type="number"
+                           name="tahun"
+                           class="form-control"
+                           value="{{ $tahun }}">
+                </div>
+
+                <div class="col-md-4">
+                    <button class="btn btn-gold-outline w-100 fw-semibold">
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 
 <div class="row">
@@ -45,7 +79,7 @@
 
     <div class="card mt-4">
         <div class="card-body">
-            <h5 class="mb-3">Grafik Kas Masuk & Kas Keluar</h5>
+            <h5 class="mb-3">Grafik Kas Masuk & Kas Keluar ({{ \Carbon\Carbon::createFromFormat('Y-m', $bulanTerpilih)->translatedFormat('F Y') }})</h5>
     
             <div style="height:320px;">
                 <canvas id="kasChart"></canvas>
@@ -61,7 +95,7 @@
             </div>
 
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-semibold mb-0">Riwayat Transaksi</h5>
+                <h5 class="fw-semibold mb-0">Riwayat Transaksi {{ \Carbon\Carbon::createFromFormat('Y-m', $bulanTerpilih)->translatedFormat('F Y') }}</h5>
             
                 <a href="/laporan" class="btn btn-sm btn-gold-outline">
                     Lihat Semua
@@ -74,8 +108,8 @@
                         <tr>
                             <th>Tanggal</th>
                             <th>Jenis</th>
-                            <th>Sumber/Tujuan</th>
-                            <th> Keterangan</th>
+                            <th>Pembayaran</th>
+                            <th>Keterangan</th>
                             <th>Jumlah</th>
                         </tr>
                     </thead>
@@ -90,7 +124,7 @@
                                         <span class="badge bg-danger">Kas Keluar</span>
                                     @endif
                                 </td>
-                                <td>{{ $item->pihak }}</td>
+                                <td>{{ strtolower((string) $item->pihak) === 'qris' ? 'QRIS' : 'Cash' }}</td>
                                 <td>{{ $item->keterangan ?? '-' }}</td>
                                 <td class="fw-semibold
                                     {{ $item->jenis == 'Masuk' ? 'text-success' : 'text-danger' }}">

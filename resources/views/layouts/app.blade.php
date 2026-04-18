@@ -66,6 +66,8 @@
         .logo-wrap {
             width: 60px;
             height: 60px;
+            aspect-ratio: 1 / 1;
+            flex-shrink: 0;
             border-radius: 50%;
             overflow: hidden;
             background: #fff;
@@ -77,8 +79,9 @@
 
         .logo-wrap img {
             width: 100%;
-            height: auto;
+            height: 100%;
             object-fit: cover;
+            border-radius: 50%;
         }
 
         ::placeholder {
@@ -183,5 +186,14 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('hide.bs.modal', function (event) {
+        const activeElement = document.activeElement;
+
+        if (activeElement instanceof HTMLElement && event.target instanceof HTMLElement && event.target.contains(activeElement)) {
+            activeElement.blur();
+        }
+    });
+</script>
 </body>
 </html>

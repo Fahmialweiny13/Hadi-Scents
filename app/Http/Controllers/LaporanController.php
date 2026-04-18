@@ -3,10 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\Models\KasMasuk;
 use App\Models\KasKeluar;
-use Carbon\Carbon;
 
 class LaporanController extends Controller
 {
@@ -14,14 +12,29 @@ class LaporanController extends Controller
 {
     $bulan = $request->bulan ?? date('m');
     $tahun = $request->tahun ?? date('Y');
+    $pembayaran = strtolower((string) $request->pembayaran);
 
-    $kasMasuk = KasMasuk::whereMonth('tanggal', $bulan)
-        ->whereYear('tanggal', $tahun)
-        ->get();
+    if (!in_array($pembayaran, ['cash', 'qris'], true)) {
+        $pembayaran = null;
+    }
 
-    $kasKeluar = KasKeluar::whereMonth('tanggal', $bulan)
-        ->whereYear('tanggal', $tahun)
-        ->get();
+    $kasMasukQuery = KasMasuk::whereMonth('tanggal', $bulan)
+        ->whereYear('tanggal', $tahun);
+
+    if ($pembayaran !== null) {
+        $kasMasukQuery->whereRaw('LOWER(sumber) = ?', [$pembayaran]);
+    }
+
+    $kasMasuk = $kasMasukQuery->get();
+
+    $kasKeluarQuery = KasKeluar::whereMonth('tanggal', $bulan)
+        ->whereYear('tanggal', $tahun);
+
+    if ($pembayaran !== null) {
+        $kasKeluarQuery->whereRaw('LOWER(tujuan) = ?', [$pembayaran]);
+    }
+
+    $kasKeluar = $kasKeluarQuery->get();
 
     $totalMasuk = $kasMasuk->sum('jumlah');
     $totalKeluar = $kasKeluar->sum('jumlah');
@@ -34,7 +47,8 @@ class LaporanController extends Controller
         'totalKeluar',
         'saldo',
         'bulan',
-        'tahun'
+        'tahun',
+        'pembayaran'
     ));
 }
 }

@@ -10,7 +10,7 @@
     <div class="card-body">
         <form method="GET" action="/laporan">
             <div class="row g-3 align-items-end">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label fw-semibold">Bulan</label>
                     <select name="bulan" class="form-select">
                         @foreach(range(1,12) as $b)
@@ -21,7 +21,7 @@
                     </select>
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label fw-semibold">Tahun</label>
                     <input type="number"
                            name="tahun"
@@ -29,7 +29,16 @@
                            value="{{ request('tahun', date('Y')) }}">
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Pembayaran</label>
+                    <select name="pembayaran" class="form-select">
+                        <option value="">Semua Pembayaran</option>
+                        <option value="cash" {{ request('pembayaran') === 'cash' ? 'selected' : '' }}>Cash</option>
+                        <option value="qris" {{ request('pembayaran') === 'qris' ? 'selected' : '' }}>QRIS</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
                     <button class="btn btn-gold-outline w-100 fw-semibold">
                         Filter
                     </button>
@@ -87,7 +96,8 @@
             <thead>
                 <tr>
                     <th style="width: 150px">Tanggal</th>
-                    <th style="width: 150px">Sumber</th>
+                    <th style="width: 130px">Pembayaran</th>
+                    <th style="width: 150px">Keterangan</th>
                     <th style="width: 100px">Jumlah</th>
                 </tr>
             </thead>
@@ -95,14 +105,15 @@
             @forelse($kasMasuk as $item)
                 <tr>
                     <td>{{ $item->tanggal }}</td>
-                    <td>{{ $item->sumber }}</td>
+                    <td>{{ strtolower((string) $item->sumber) === 'qris' ? 'QRIS' : 'Cash' }}</td>
+                    <td>{{ $item->keterangan ?? '-' }}</td>
                     <td class="text-success">
                         Rp {{ number_format($item->jumlah) }}
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="3" class="text-center text-muted">
+                    <td colspan="4" class="text-center text-muted">
                         Tidak ada data
                     </td>
                 </tr>
@@ -124,7 +135,8 @@
             <thead>
                 <tr>
                     <th style="width: 150px">Tanggal</th>
-                    <th style="width: 150px">Tujuan</th>
+                    <th style="width: 130px">Pembayaran</th>
+                    <th style="width: 150px">Keterangan</th>
                     <th style="width: 100px">Jumlah</th>
                 </tr>
             </thead>
@@ -132,14 +144,15 @@
             @forelse($kasKeluar as $item)
                 <tr>
                     <td>{{ $item->tanggal }}</td>
-                    <td>{{ $item->tujuan }}</td>
+                    <td>{{ strtolower((string) $item->tujuan) === 'qris' ? 'QRIS' : 'Cash' }}</td>
+                    <td>{{ $item->keterangan ?? '-' }}</td>
                     <td class="text-danger">
                         Rp {{ number_format($item->jumlah) }}
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="3" class="text-center text-muted">
+                    <td colspan="4" class="text-center text-muted">
                         Tidak ada data
                     </td>
                 </tr>
