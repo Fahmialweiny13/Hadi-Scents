@@ -16,9 +16,9 @@
                 <div class="col-md-4">
                     <label for="bulan" class="form-label fw-semibold">Bulan</label>
                     <select id="bulan" name="bulan" class="form-select">
-                        <option value="" {{ !$isFiltered ? 'selected' : '' }}>Keseluruhan</option>
+                        <option value="" {{ !request()->filled('bulan') ? 'selected' : '' }}>Keseluruhan</option>
                         @foreach(range(1,12) as $b)
-                            <option value="{{ $b }}" {{ $isFiltered && (int) $bulan === $b ? 'selected' : '' }}>
+                            <option value="{{ $b }}" {{ request()->filled('bulan') && (int) request('bulan') === $b ? 'selected' : '' }}>
                                 {{ date('F', mktime(0,0,0,$b,1)) }}
                             </option>
                         @endforeach
@@ -31,7 +31,8 @@
                            type="number"
                            name="tahun"
                            class="form-control"
-                           value="{{ $tahun }}">
+                              placeholder="Contoh: {{ now()->year }}"
+                              value="{{ request()->filled('tahun') ? $tahun : '' }}">
                 </div>
 
                 <div class="col-md-4">
