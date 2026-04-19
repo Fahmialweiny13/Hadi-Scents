@@ -16,8 +16,9 @@
                 <div class="col-md-4">
                     <label for="bulan" class="form-label fw-semibold">Bulan</label>
                     <select id="bulan" name="bulan" class="form-select">
+                        <option value="" {{ !$isFiltered ? 'selected' : '' }}>Keseluruhan</option>
                         @foreach(range(1,12) as $b)
-                            <option value="{{ $b }}" {{ (int) $bulan === $b ? 'selected' : '' }}>
+                            <option value="{{ $b }}" {{ $isFiltered && (int) $bulan === $b ? 'selected' : '' }}>
                                 {{ date('F', mktime(0,0,0,$b,1)) }}
                             </option>
                         @endforeach
@@ -79,7 +80,7 @@
 
     <div class="card mt-4">
         <div class="card-body">
-            <h5 class="mb-3">Grafik Kas Masuk & Kas Keluar ({{ \Carbon\Carbon::createFromFormat('Y-m', $bulanTerpilih)->translatedFormat('F Y') }})</h5>
+            <h5 class="mb-3">Grafik Kas Masuk & Kas Keluar ({{ $periodeLabel }})</h5>
     
             <div style="height:320px;">
                 <canvas id="kasChart"></canvas>
@@ -95,7 +96,7 @@
             </div>
 
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-semibold mb-0">Riwayat Transaksi {{ \Carbon\Carbon::createFromFormat('Y-m', $bulanTerpilih)->translatedFormat('F Y') }}</h5>
+                <h5 class="fw-semibold mb-0">Riwayat Transaksi {{ $periodeLabel }}</h5>
             
                 <a href="/laporan" class="btn btn-sm btn-gold-outline">
                     Lihat Semua

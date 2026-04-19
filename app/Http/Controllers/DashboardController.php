@@ -9,54 +9,70 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // samakan format filter dengan halaman laporan: bulan + tahun
+        // kalau bulan dan tahun diisi, berarti kita pakai mode filter
+        $isFiltered = $request->filled('bulan') && $request->filled('tahun');
         $bulan = (int) $request->query('bulan', now()->month);
         $tahun = (int) $request->query('tahun', now()->year);
 
+        // amankan nilai bulan biar tetap valid
         if ($bulan < 1 || $bulan > 12) {
             $bulan = (int) now()->month;
         }
 
+        // amankan nilai tahun biar tidak keluar batas
         if ($tahun < 2000 || $tahun > 2100) {
             $tahun = (int) now()->year;
         }
 
+        // siapkan label periode buat ditampilkan di dashboard
         $bulanTerpilih = sprintf('%04d-%02d', $tahun, $bulan);
+        $periodeLabel = $isFiltered
+            ? now()->setDate($tahun, $bulan, 1)->translatedFormat('F Y')
+            : 'Keseluruhan';
 
-        // total hanya untuk 1 bulan terpilih
-        $totalMasuk = DB::table('kas_masuk')
-            ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulanTerpilih])
-            ->sum('jumlah');
+        // mulai query total kas masuk dan keluar
+        $totalMasukQuery = DB::table('kas_masuk');
+        $totalKeluarQuery = DB::table('kas_keluar');
 
-        $totalKeluar = DB::table('kas_keluar')
-            ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulanTerpilih])
-            ->sum('jumlah');
+        // kalau filter aktif, batasi data sesuai bulan dan tahun
+        if ($isFiltered) {
+            $totalMasukQuery->whereMonth('tanggal', $bulan)->whereYear('tanggal', $tahun);
+            $totalKeluarQuery->whereMonth('tanggal', $bulan)->whereYear('tanggal', $tahun);
+        }
+
+        $totalMasuk = $totalMasukQuery->sum('jumlah');
+
+        $totalKeluar = $totalKeluarQuery->sum('jumlah');
 
         $saldo = $totalMasuk - $totalKeluar;
 
-        // grafik kas masuk untuk bulan terpilih
+        // ambil data grafik kas masuk
         $masukChart = DB::table('kas_masuk')
             ->select(
                 DB::raw("DATE_FORMAT(tanggal, '%Y-%m') as bulan"),
                 DB::raw('SUM(jumlah) as total')
             )
-            ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulanTerpilih])
+            ->when($isFiltered, function ($query) use ($bulan, $tahun) {
+                $query->whereMonth('tanggal', $bulan)->whereYear('tanggal', $tahun);
+            })
             ->groupBy('bulan')
             ->orderBy('bulan')
             ->get();
 
-        // grafik kas keluar untuk bulan terpilih
+        // ambil data grafik kas keluar
         $keluarChart = DB::table('kas_keluar')
             ->select(
                 DB::raw("DATE_FORMAT(tanggal, '%Y-%m') as bulan"),
                 DB::raw('SUM(jumlah) as total')
             )
-            ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulanTerpilih])
+            ->when($isFiltered, function ($query) use ($bulan, $tahun) {
+                $query->whereMonth('tanggal', $bulan)->whereYear('tanggal', $tahun);
+            })
             ->groupBy('bulan')
             ->orderBy('bulan')
             ->get();
 
-        // riwayat transaksi (5 terakhir) untuk bulan terpilih
+        // siapkan query riwayat kas masuk
         $kasMasuk = DB::table('kas_masuk')
             ->select(
                 'tanggal',
@@ -64,9 +80,13 @@ class DashboardController extends Controller
                 'keterangan',
                 'jumlah',
                 DB::raw("'Masuk' as jenis")
-            )
-            ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulanTerpilih]);
+            );
 
+        if ($isFiltered) {
+            $kasMasuk->whereMonth('tanggal', $bulan)->whereYear('tanggal', $tahun);
+        }
+
+        // siapkan query riwayat kas keluar
         $kasKeluar = DB::table('kas_keluar')
             ->select(
                 'tanggal',
@@ -74,9 +94,13 @@ class DashboardController extends Controller
                 'keterangan',
                 'jumlah',
                 DB::raw("'Keluar' as jenis")
-            )
-            ->whereRaw("DATE_FORMAT(tanggal, '%Y-%m') = ?", [$bulanTerpilih]);
+            );
 
+        if ($isFiltered) {
+            $kasKeluar->whereMonth('tanggal', $bulan)->whereYear('tanggal', $tahun);
+        }
+
+        // gabungkan jadi satu riwayat terbaru
         $riwayat = $kasMasuk
             ->unionAll($kasKeluar)
             ->orderBy('tanggal', 'desc')
@@ -91,6 +115,8 @@ class DashboardController extends Controller
             'keluarChart',
             'riwayat',
             'bulanTerpilih',
+            'periodeLabel',
+            'isFiltered',
             'bulan',
             'tahun'
         ));
