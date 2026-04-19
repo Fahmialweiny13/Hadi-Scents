@@ -35,9 +35,14 @@
                 </div>
 
                 <div class="col-md-4">
-                    <button class="btn btn-gold-outline w-100 fw-semibold">
-                        Filter
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-gold-outline w-50 fw-semibold">
+                            Filter
+                        </button>
+                        <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary w-50">
+                            Reset
+                        </a>
+                    </div>
                 </div>
             </div>
         </form>
